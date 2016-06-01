@@ -29,6 +29,7 @@ public class SnapFragment extends Fragment {
 		new Actor.Builder(SpringSystem.create(), circle)
 				.addTranslateMotion(MotionProperty.Y)
 				.addMotion(
+						//改变动画执行完后最终停留的位置,默认的位置是0 从哪儿来回哪儿去
 						new MotionImitator(MotionProperty.X) {
 							@Override
 							public void release(MotionEvent event) {
@@ -38,6 +39,7 @@ public class SnapFragment extends Fragment {
 										rootView.getMeasuredWidth() / 2 -
 												circle.getMeasuredWidth() / 2) {
 
+									//Spring的endValue 通常是View的左上角的坐标
 									mSpring.setEndValue(rootView.getMeasuredWidth() -
 											circle.getMeasuredWidth());
 								} else {

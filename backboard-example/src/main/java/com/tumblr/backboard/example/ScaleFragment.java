@@ -49,6 +49,7 @@ public class ScaleFragment extends Fragment {
 					// an event property to a Spring
 					float scaleX, scaleY;
 
+					//通过触摸的点来计算实际的endValue
 					float delta = event.getX() - (rect.getX() + rect.getMeasuredWidth() / 2);
 					scaleX = Math.abs(delta) / (rect.getMeasuredWidth() / 2);
 

@@ -117,6 +117,7 @@ public abstract class EventImitator extends Imitator {
 				constrain(event);
 
 			case MotionEvent.ACTION_MOVE:
+				//这个api没使用过 貌似是用来计算dt 两点之间点击的时间间隔
 				if (event.getHistorySize() > 0) {
 					mime(offset, value, delta,
 							event.getEventTime() - event.getHistoricalEventTime(0), event);
