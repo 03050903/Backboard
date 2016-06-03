@@ -105,11 +105,13 @@ public class ExplosionFragment extends Fragment {
 		public void run() {
 			if (mTouching) {
 
+                //获取颜色id
 				colorIndex++;
 				if (colorIndex >= mCircles.length()) {
 					colorIndex = 0;
 				}
 
+				//获取view的宽高度
 				float diameter = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DIAMETER,
 						getResources().getDisplayMetrics());
 
@@ -131,7 +133,9 @@ public class ExplosionFragment extends Fragment {
 	                                 int diameter,
 	                                 Drawable backgroundDrawable) {
 
+		//x轴滑行效果的Spring
 		final Spring xSpring = springSystem.createSpring().setSpringConfig(coasting);
+		//y轴 重力效果 把tension 设置为1 Spring
 		final Spring ySpring = springSystem.createSpring().setSpringConfig(gravity);
 
 		// create view
@@ -145,12 +149,15 @@ public class ExplosionFragment extends Fragment {
 		rootView.addView(view);
 
 		// generate random direction and magnitude
-		double magnitude = Math.random() * 1000 + 3000;
-		double angle = Math.random() * Math.PI / 2 + Math.PI / 4;
+		double magnitude = Math.random() * 1000 + 3000; //magnitude大小
+		double angle = Math.random() * Math.PI / 2 + Math.PI / 4; //弧度
 
+		//x轴的速率 其实就这个velocity的感觉 向计算某个方向的向量值一样
 		xSpring.setVelocity(magnitude * Math.cos(angle));
+		//y轴是向下的 所以是负数
 		ySpring.setVelocity(-magnitude * Math.sin(angle));
 
+		//控制view的位置如果超过了这个范围 则调用Destroyer删掉view
 		int maxX = rootView.getMeasuredWidth() / 2 + diameter;
 		xSpring.addListener(new Destroyer(rootView, view, -maxX, maxX));
 
