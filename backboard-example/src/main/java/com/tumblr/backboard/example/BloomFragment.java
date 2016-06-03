@@ -72,12 +72,17 @@ public class BloomFragment extends Fragment {
 		final Spring spring = springSystem.createSpring();
 
 		// add listeners along arc
-		double arc = 2 * Math.PI / mCircles.length;
+		double arc = 2 * Math.PI / mCircles.length;//Circle间的弧度
 
 		for (int i = 0; i < mCircles.length; i++) {
 			View view = mCircles[i];
 
 			// map spring to a line segment from the center to the edge of the ring
+			/**
+			 * {@link com.facebook.rebound.SpringUtil #mapValueFromRangeToRange}
+			 * Spring endValue值是从 0 - 1的,但实际的值是在 0 - R*cos()或者R*sin()直接的
+			 * 所以需要mapValueFromRangeToRange来算出实际比例的值
+			 */
 			spring.addListener(new MapPerformer(view, View.TRANSLATION_X, 0, 1,
 					0, (float) (RING_DIAMETER * Math.cos(i * arc))));
 
@@ -87,6 +92,9 @@ public class BloomFragment extends Fragment {
 			spring.setEndValue(CLOSED);
 		}
 
+		/**
+		 * {@link ToggleImitator}是Imitator的继承类 主要关心点击中的ACTION_DOWN 和 ACTION_UP操作
+		 */
 		mRootView.setOnTouchListener(new ToggleImitator(spring, CLOSED, OPEN));
 
 		return mRootView;

@@ -36,10 +36,16 @@ public class FlowerFragment extends Fragment {
 	private static final int OPEN = 1;
 	private static final int CLOSED = 0;
 
+	/**
+	 * 计算两点之间的直线距离 其实属性并不差 只是没能灵活运用到程序的处理中 值得深思
+     */
 	private static double distSq(double x1, double y1, double x2, double y2) {
 		return Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2);
 	}
 
+	/**
+	 * 找到直线距离最小的View
+     */
 	private static View nearest(float x, float y, View[] views) {
 		double minDistSq = Double.MAX_VALUE;
 		View minView = null;
@@ -48,8 +54,11 @@ public class FlowerFragment extends Fragment {
 			double distSq = distSq(x, y, view.getX() + view.getMeasuredWidth() / 2,
 					view.getY() + view.getMeasuredHeight() / 2);
 
-			if (distSq < Math.pow(1.5f * view.getMeasuredWidth(), 2) && distSq < minDistSq) {
+			//两点之间的距离小于1.5倍 view宽度的时候 或者 小于记录的离view最小的距离
+			if (distSq < Math.pow(1.0f * view.getMeasuredWidth(), 2) && distSq < minDistSq) {
+				//记录最小的距离
 				minDistSq = distSq;
+				//记录距离最小的view
 				minView = view;
 			}
 		}
@@ -69,23 +78,48 @@ public class FlowerFragment extends Fragment {
 		@Override
 		public void mime(float offset, float value, float delta, float dt, MotionEvent event) {
 			// find the nearest view
+			//event.getX() 是表示第一个点按下的x坐标 相对于view的x坐标
+			//event.getX() + view.getX() 才表示实际移动到的x坐标 我在想为啥不用 getRawX
+
+			//其实在此用getRawX 都是一样的效果 还少计算一次 但是在此有个问题就是 getRawY后 需要减去statusBar的高度
+			//event.getY() + mCircle.getY() 通过此种方式替代 getRawY 方法能省去减statusBar的操作
 			final View nearest = nearest(
 					event.getX() + mCircle.getX(),
 					event.getY() + mCircle.getY(), mCircles);
 
 			if (nearest != null) {
 				// snap to it - remember to compensate for translation
+				//符合snap条件 直接移动到目标view的位置 x,y坐标都要变
 				switch (mProperty) {
-				case X:
-					getSpring().setEndValue(nearest.getX() + nearest.getWidth() / 2
-							- mCircle.getLeft() - mCircle.getWidth() / 2);
-					break;
-				case Y:
-					getSpring().setEndValue(nearest.getY() + nearest.getHeight() / 2
-							- mCircle.getTop() - mCircle.getHeight() / 2);
-					break;
+					case X:
+						getSpring().setEndValue(nearest.getX() + nearest.getWidth() / 2
+								- mCircle.getLeft() - mCircle.getWidth() / 2);
+						break;
+					case Y:
+						getSpring().setEndValue(nearest.getY() + nearest.getHeight() / 2
+								- mCircle.getTop() - mCircle.getHeight() / 2);
+						break;
 				}
+
+				//如果有触及到view,将对应的view放大处理
+//				final SpringSystem springSystem = SpringSystem.create();
+//				// create spring
+//				final Spring spring = springSystem.createSpring();
+//				spring.addListener(new Performer(nearest,View.SCALE_X));
+//				spring.addListener(new Performer(nearest,View.SCALE_Y));
+//				if(spring.getCurrentValue() != 1.2) {
+//					spring.setCurrentValue(1.2);
+//				}
 			} else {
+				//当没有触及到任何view时 重置所有Circle为初始状态
+//				final SpringSystem springSystem = SpringSystem.create();
+//				// create spring
+//				final Spring spring = springSystem.createSpring();
+//				for (View view : mCircles) {
+//					spring.addListener(new Performer(view, View.SCALE_X));
+//					spring.addListener(new Performer(view, View.SCALE_Y));
+//					spring.setCurrentValue(1);
+//				}
 				// follow finger
 				super.mime(offset, value, delta, dt, event);
 			}
@@ -129,6 +163,7 @@ public class FlowerFragment extends Fragment {
 			mRootView.addView(mCircles[i], 0);
 		}
 
+		//资源回收
 		circles.recycle();
 
 		/* Animations! */
@@ -154,13 +189,14 @@ public class FlowerFragment extends Fragment {
 			spring.setEndValue(CLOSED);
 		}
 
+		//专门处理单击事件的Imitator,处理了 ACTION_DOWN 和 ACTION_UP
 		final ToggleImitator imitator = new ToggleImitator(spring, CLOSED, OPEN);
 
 		// move circle using finger, snap when near another circle, and bloom when touched
 		new Actor.Builder(SpringSystem.create(), mCircle)
 				.addMotion(new SnapImitator(MotionProperty.X), View.TRANSLATION_X)
 				.addMotion(new SnapImitator(MotionProperty.Y), View.TRANSLATION_Y)
-				.onTouchListener(imitator)
+				.onTouchListener(imitator)//截断默认的touch事件 用imitator来处理
 				.build();
 
 		return mRootView;
