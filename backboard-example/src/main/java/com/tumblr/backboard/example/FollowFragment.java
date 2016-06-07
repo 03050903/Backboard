@@ -89,8 +89,11 @@ public class FollowFragment extends Fragment {
 		for (int i = 0; i < mFollowers.length; i++) {
 
 			// create spring to bind views
+			// 为每个view设置 Spring
 			followsX[i] = springSystem.createSpring();
 			followsY[i] = springSystem.createSpring();
+
+			//view的x,y坐标随着 Spring值的变化而变化
 			followsX[i].addListener(new Performer(mFollowers[i], View.TRANSLATION_X));
 			followsY[i].addListener(new Performer(mFollowers[i], View.TRANSLATION_Y));
 
@@ -99,7 +102,7 @@ public class FollowFragment extends Fragment {
 			final SpringImitator followY = new SpringImitator(followsY[i]);
 
 			//  imitate the previous character
-			if (i == 0) {
+			if (i == 0) {//将 leaderCircle的 Spring变化监听使用在followX上
 				springX.addListener(followX);
 				springY.addListener(followY);
 			} else {
