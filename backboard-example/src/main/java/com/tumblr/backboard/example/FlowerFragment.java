@@ -3,6 +3,7 @@ package com.tumblr.backboard.example;
 import android.app.Fragment;
 import android.content.res.TypedArray;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -18,6 +19,7 @@ import com.tumblr.backboard.imitator.Imitator;
 import com.tumblr.backboard.imitator.MotionImitator;
 import com.tumblr.backboard.imitator.ToggleImitator;
 import com.tumblr.backboard.performer.MapPerformer;
+import com.tumblr.backboard.performer.Performer;
 
 /**
  * A ring of views that bloom and then contract, with a selector that follows the finger.
@@ -88,18 +90,36 @@ public class FlowerFragment extends Fragment {
 					event.getY() + mCircle.getY(), mCircles);
 
 			if (nearest != null) {
-				// snap to it - remember to compensate for translation
-				//符合snap条件 直接移动到目标view的位置 x,y坐标都要变
-				switch (mProperty) {
-					case X:
-						getSpring().setEndValue(nearest.getX() + nearest.getWidth() / 2
-								- mCircle.getLeft() - mCircle.getWidth() / 2);
-						break;
-					case Y:
-						getSpring().setEndValue(nearest.getY() + nearest.getHeight() / 2
-								- mCircle.getTop() - mCircle.getHeight() / 2);
-						break;
-				}
+                // snap to it - remember to compensate for translation
+                //符合snap条件 直接移动到目标view的位置 x,y坐标都要变
+                float centerNearestX = nearest.getX() + nearest.getWidth() / 2;
+                float centerNearestY = nearest.getY() + nearest.getHeight() / 2;
+                float centerCircleX = mCircle.getX() + mCircle.getWidth() / 2;
+                float centerCircleY = mCircle.getY() + mCircle.getHeight() / 2;
+                double sq = distSq(centerCircleX, centerCircleY, centerNearestX, centerNearestY);
+                double sqrt = Math.sqrt(sq);
+
+                if(sqrt != 0) {
+                    Log.e("tag","sqrt:"+sqrt);
+//                    float v = (float) SpringUtil.mapValueFromRangeToRange(sqrt, diameter, 0, 1, 1.5);
+//                    nearest.setScaleX(v);
+//                    nearest.setScaleY(v);
+                    Spring spring = springSystem.createSpring();
+                    spring.addListener(new MapPerformer(nearest, View.SCALE_X, diameter, 0, 1, 1.5f));
+                    spring.addListener(new MapPerformer(nearest, View.SCALE_Y, diameter, 0, 1, 1.5f));
+                    spring.setCurrentValue(sqrt);
+                }
+
+//                switch (mProperty) {
+//					case X:
+//						getSpring().setEndValue(nearest.getX() + nearest.getWidth() / 2
+//								- mCircle.getLeft() - mCircle.getWidth() / 2);
+//						break;
+//					case Y:
+//						getSpring().setEndValue(nearest.getY() + nearest.getHeight() / 2
+//								- mCircle.getTop() - mCircle.getHeight() / 2);
+//						break;
+//				}
 
 				//如果有触及到view,将对应的view放大处理
 //				final SpringSystem springSystem = SpringSystem.create();
@@ -114,18 +134,21 @@ public class FlowerFragment extends Fragment {
 				//当没有触及到任何view时 重置所有Circle为初始状态
 //				final SpringSystem springSystem = SpringSystem.create();
 //				// create spring
-//				final Spring spring = springSystem.createSpring();
-//				for (View view : mCircles) {
-//					spring.addListener(new Performer(view, View.SCALE_X));
-//					spring.addListener(new Performer(view, View.SCALE_Y));
-//					spring.setCurrentValue(1);
-//				}
-				// follow finger
-				super.mime(offset, value, delta, dt, event);
+				final Spring spring = springSystem.createSpring();
+				for (View view : mCircles) {
+					spring.addListener(new Performer(view, View.SCALE_X));
+					spring.addListener(new Performer(view, View.SCALE_Y));
+					spring.setCurrentValue(1);
+				}
+
 			}
-		}
+				// follow finger
+            super.mime(offset, value, delta, dt, event);
+        }
 	}
 
+    final SpringSystem springSystem = SpringSystem.create();
+    float diameter;
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 	                         Bundle savedInstanceState) {
@@ -135,7 +158,7 @@ public class FlowerFragment extends Fragment {
 		mCircles = new View[6];
 		mCircle = mRootView.findViewById(R.id.circle);
 
-		final float diameter = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DIAMETER,
+        diameter = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, DIAMETER,
 				getResources().getDisplayMetrics());
 
 		final TypedArray circles = getResources().obtainTypedArray(R.array.circles);
